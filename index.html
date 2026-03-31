@@ -8,464 +8,110 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-  :root {
-    --bg:        #0a0c0f;
-    --surface:   #111418;
-    --card:      #161b22;
-    --border:    #2a2f3a;
-    --border2:   #1e2330;
-    --gold:      #c9a84c;
-    --gold2:     #e8c96d;
-    --red:       #8b1a1a;
-    --red2:      #c0392b;
-    --text:      #e8e2d5;
-    --muted:     #7a8394;
-    --muted2:    #9aa3b2;
-    --accent:    #2d6a9f;
-  }
-
-  * { margin:0; padding:0; box-sizing:border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Libre Baskerville', serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ── NOISE TEXTURE OVERLAY ── */
-  body::before {
-    content:'';
-    position:fixed; inset:0; pointer-events:none; z-index:0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    opacity:.4;
-  }
-
-  /* ── HEADER ── */
-  header {
-    position: relative; z-index:10;
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, #0d1017 0%, var(--bg) 100%);
-    padding: 0 2rem;
-  }
-
-  .header-inner {
-    max-width: 1200px; margin: 0 auto;
-    display: flex; align-items: center; gap: 1.5rem;
-    padding: 1.2rem 0;
-  }
-
-  .escudo {
-    width: 52px; height: 52px;
-    background: radial-gradient(circle at 40% 35%, #2d5a1b, #1a3a0f);
-    border-radius: 50%;
-    border: 2px solid var(--gold);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem;
-    box-shadow: 0 0 20px rgba(201,168,76,.15);
-    flex-shrink: 0;
-  }
-
-  .header-titles { flex: 1; }
-
-  .header-titles h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 600; font-size: 1.55rem;
-    color: var(--gold2);
-    letter-spacing: 0.04em;
-    line-height: 1.1;
-  }
-
-  .header-titles p {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem; letter-spacing: 0.18em;
-    color: var(--muted); text-transform: uppercase;
-    margin-top: 3px;
-  }
-
-  .pdf-upload-area {
-    display: flex; align-items: center; gap: .8rem;
-  }
-
-  .pdf-status {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.62rem; letter-spacing: 0.1em;
-    color: var(--muted); text-align: right; line-height: 1.5;
-  }
-  .pdf-status.loaded { color: #4caf7d; }
-  .pdf-status.error  { color: var(--red2); }
-
-  .btn-upload {
-    display: flex; align-items: center; gap: .5rem;
-    padding: .5rem 1rem;
-    background: transparent;
-    border: 1px solid var(--gold);
-    color: var(--gold);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem; letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: all .2s;
-    white-space: nowrap;
-  }
-  .btn-upload:hover { background: rgba(201,168,76,.08); }
-  #pdf-input { display: none; }
-
-  /* ── MAIN LAYOUT ── */
-  main {
-    position: relative; z-index: 5;
-    max-width: 1200px; margin: 0 auto;
-    padding: 2rem;
-  }
-
-  /* ── SEARCH PANEL ── */
-  .search-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 1.5rem 2rem;
-    margin-bottom: 2rem;
-  }
-
-  .search-panel h2 {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.62rem; letter-spacing: 0.2em;
-    text-transform: uppercase; color: var(--muted);
-    margin-bottom: 1.2rem;
-  }
-
-  .search-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 1rem; align-items: end;
-  }
-
-  @media(max-width:768px) {
-    .search-grid { grid-template-columns: 1fr; }
-  }
-
-  .field { display: flex; flex-direction: column; gap: .4rem; }
-
-  .field label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem; letter-spacing: 0.15em;
-    text-transform: uppercase; color: var(--muted);
-  }
-
-  .field input, .field select {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: .55rem .75rem;
-    font-family: 'Libre Baskerville', serif;
-    font-size: 0.82rem;
-    outline: none;
-    transition: border-color .2s;
-    width: 100%;
-  }
-  .field input:focus, .field select:focus {
-    border-color: var(--gold);
-  }
-  .field select option { background: var(--bg); }
-
-  .btn-search {
-    padding: .55rem 1.5rem;
-    background: var(--gold);
-    color: #0a0c0f;
-    border: none; cursor: pointer;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem; letter-spacing: 0.12em;
-    font-weight: 500;
-    transition: all .2s;
-    white-space: nowrap;
-    height: fit-content;
-  }
-  .btn-search:hover { background: var(--gold2); }
-
-  .btn-clear {
-    padding: .55rem 1rem;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    cursor: pointer;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem; letter-spacing: 0.1em;
-    transition: all .2s;
-  }
-  .btn-clear:hover { border-color: var(--muted); color: var(--text); }
-
-  /* ── RESULTS SUMMARY ── */
-  .results-summary {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem; letter-spacing: 0.12em;
-    color: var(--muted); margin-bottom: 1.2rem;
-    display: flex; align-items: center; gap: 1rem;
-  }
-  .results-summary span.count { color: var(--gold); font-weight: 500; }
-
-  /* ── MEMBERS GRID ── */
-  .members-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 1px;
-    background: var(--border2);
-    border: 1px solid var(--border2);
-  }
-
-  /* ── MEMBER CARD ── */
-  .member-card {
-    background: var(--card);
-    padding: 0;
-    cursor: pointer;
-    transition: background .15s;
-    position: relative;
-    overflow: hidden;
-  }
-  .member-card:hover { background: #1c2230; }
-  .member-card.active { background: #1a2535; }
-
-  .card-header {
-    padding: 1.1rem 1.3rem .8rem;
-    border-bottom: 1px solid var(--border2);
-    display: flex; align-items: flex-start; gap: .9rem;
-  }
-
-  .rank-badge {
-    flex-shrink: 0;
-    width: 38px; height: 38px;
-    background: var(--red);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem; font-weight: 500;
-    color: #e8c9c9;
-    border: 1px solid rgba(139,26,26,.5);
-  }
-
-  .card-name-area { flex: 1; min-width: 0; }
-
-  .card-num {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.55rem; letter-spacing: 0.2em;
-    color: var(--muted); text-transform: uppercase;
-    margin-bottom: 2px;
-  }
-
-  .card-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 600; font-size: 1.05rem;
-    color: var(--text); line-height: 1.2;
-    letter-spacing: 0.02em;
-  }
-
-  .card-rank {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem; letter-spacing: 0.12em;
-    color: var(--gold); text-transform: uppercase;
-    margin-top: 3px;
-  }
-
-  .card-meta {
-    padding: .7rem 1.3rem;
-    display: flex; flex-wrap: wrap; gap: .4rem;
-  }
-
-  .tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.55rem; letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: .2rem .5rem;
-    border: 1px solid var(--border);
-    color: var(--muted2);
-    background: rgba(255,255,255,.02);
-  }
-  .tag.lang { border-color: rgba(44,106,159,.4); color: #7ab3d4; }
-  .tag.loc  { border-color: rgba(201,168,76,.25); color: #bfa85e; }
-
-  .card-detail {
-    padding: .6rem 1.3rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.58rem; letter-spacing: 0.08em;
-    color: var(--muted);
-    border-top: 1px solid var(--border2);
-    display: flex; justify-content: space-between;
-  }
-
-  /* ── DETAIL PANEL ── */
-  .detail-overlay {
-    position: fixed; inset: 0; z-index: 100;
-    background: rgba(0,0,0,.7);
-    backdrop-filter: blur(4px);
-    display: none; align-items: flex-start; justify-content: flex-end;
-    padding: 1rem;
-  }
-  .detail-overlay.open { display: flex; }
-
-  .detail-panel {
-    width: min(580px, 100%);
-    max-height: calc(100vh - 2rem);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--gold);
-    overflow-y: auto;
-    animation: slideIn .25s ease;
-  }
-
-  @keyframes slideIn {
-    from { transform: translateX(30px); opacity: 0; }
-    to   { transform: translateX(0); opacity: 1; }
-  }
-
-  .detail-top {
-    position: sticky; top: 0;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 1rem 1.5rem;
-    display: flex; align-items: center; justify-content: space-between;
-    z-index: 5;
-  }
-
-  .detail-top h3 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.2rem; font-weight: 600;
-    color: var(--gold2); letter-spacing: 0.03em;
-  }
-
-  .btn-close {
-    background: none; border: 1px solid var(--border);
-    color: var(--muted); cursor: pointer;
-    width: 28px; height: 28px;
-    font-size: 1rem; display: flex;
-    align-items: center; justify-content: center;
-    transition: all .2s;
-  }
-  .btn-close:hover { border-color: var(--red2); color: var(--red2); }
-
-  .detail-body { padding: 1.5rem; }
-
-  .detail-section {
-    margin-bottom: 1.5rem;
-  }
-
-  .detail-section h4 {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.58rem; letter-spacing: 0.2em;
-    text-transform: uppercase; color: var(--muted);
-    border-bottom: 1px solid var(--border2);
-    padding-bottom: .4rem; margin-bottom: .8rem;
-  }
-
-  .detail-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
-  }
-
-  .dg-item label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.55rem; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--muted);
-    display: block; margin-bottom: 2px;
-  }
-
-  .dg-item span {
-    font-size: 0.82rem; color: var(--text);
-  }
-
-  .langs-row { display: flex; flex-wrap: wrap; gap: .4rem; margin-top:.2rem; }
-
-  .lang-pill {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem; letter-spacing: 0.08em;
-    padding: .2rem .6rem;
-    border: 1px solid rgba(44,106,159,.5);
-    color: #7ab3d4;
-    background: rgba(44,106,159,.08);
-  }
-
-  /* Timeline */
-  .timeline { position: relative; padding-left: 1.2rem; }
-  .timeline::before {
-    content: '';
-    position: absolute; left: 5px; top: 4px; bottom: 4px;
-    width: 1px; background: var(--border);
-  }
-
-  .tl-item {
-    position: relative; padding: .4rem 0 .4rem .8rem;
-    border-bottom: 1px solid var(--border2);
-  }
-  .tl-item:last-child { border-bottom: none; }
-
-  .tl-item::before {
-    content:'';
-    position: absolute; left: -5px; top: 10px;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--border);
-    border: 1px solid var(--border);
-  }
-  .tl-item.posting::before { background: var(--gold); border-color: var(--gold); }
-
-  .tl-adscripcion {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 0.9rem; font-weight: 600;
-    color: var(--text);
-  }
-  .tl-adscripcion.posting-name { color: var(--gold2); }
-
-  .tl-funcion {
-    font-size: 0.75rem; color: var(--muted2);
-    margin: 1px 0;
-  }
-
-  .tl-period {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.55rem; letter-spacing: 0.08em;
-    color: var(--muted);
-  }
-
-  .ranks-row { display: flex; flex-wrap: wrap; gap: .4rem; }
-  .rank-pill {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem; letter-spacing: 0.08em;
-    padding: .25rem .7rem;
-    border: 1px solid rgba(139,26,26,.4);
-    color: #d4a0a0;
-    background: rgba(139,26,26,.08);
-  }
-
-  /* ── EMPTY STATE ── */
-  .empty-state {
-    grid-column: 1/-1;
-    text-align: center; padding: 4rem 2rem;
-    color: var(--muted);
-  }
-  .empty-state p { font-family: 'DM Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; }
-  .empty-state .big { font-size: 2.5rem; margin-bottom: 1rem; opacity: .3; }
-
-  /* ── LOADING ── */
-  .loading-bar {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 999;
-    height: 2px; background: var(--gold);
-    transform: scaleX(0); transform-origin: left;
-    transition: transform .4s;
-  }
-  .loading-bar.active { animation: loadprogress 1.5s ease infinite; }
-  @keyframes loadprogress {
-    0%   { transform: scaleX(0) translateX(0); }
-    50%  { transform: scaleX(.6) translateX(40%); }
-    100% { transform: scaleX(0) translateX(200%); }
-  }
-
-  /* scrollbar */
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); }
-  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+:root {
+  --bg:#0a0c0f; --surface:#111418; --card:#161b22;
+  --border:#2a2f3a; --border2:#1e2330;
+  --gold:#c9a84c; --gold2:#e8c96d;
+  --red:#8b1a1a; --red2:#c0392b;
+  --text:#e8e2d5; --muted:#7a8394; --muted2:#9aa3b2;
+  --green:#4caf7d;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Libre Baskerville',serif;min-height:100vh;overflow-x:hidden;}
+header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0d1017 0%,var(--bg) 100%);padding:0 2rem;}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:1.5rem;padding:1.2rem 0;flex-wrap:wrap;}
+.escudo{width:52px;height:52px;background:radial-gradient(circle at 40% 35%,#2d5a1b,#1a3a0f);border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 0 20px rgba(201,168,76,.15);flex-shrink:0;}
+.header-titles{flex:1;}
+.header-titles h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.55rem;color:var(--gold2);letter-spacing:.04em;line-height:1.1;}
+.header-titles p{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-top:3px;}
+.upload-area{display:flex;align-items:center;gap:.8rem;}
+.pdf-status{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;color:var(--muted);text-align:right;line-height:1.6;}
+.pdf-status.ok{color:var(--green);}
+.pdf-status.err{color:var(--red2);}
+.btn-upload{padding:.5rem 1rem;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.1em;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-upload:hover{background:rgba(201,168,76,.08);}
+#pdf-input{display:none;}
+main{max-width:1200px;margin:0 auto;padding:2rem;}
+.search-panel{background:var(--surface);border:1px solid var(--border);padding:1.5rem 2rem;margin-bottom:2rem;}
+.search-panel h2{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:1.2rem;}
+.search-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:1rem;align-items:end;}
+@media(max-width:700px){.search-grid{grid-template-columns:1fr;}}
+.field{display:flex;flex-direction:column;gap:.4rem;}
+.field label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+.field input,.field select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:.55rem .75rem;font-family:'Libre Baskerville',serif;font-size:.82rem;outline:none;transition:border-color .2s;width:100%;}
+.field input:focus,.field select:focus{border-color:var(--gold);}
+.field select option{background:var(--bg);}
+.btn-row{display:flex;gap:.5rem;}
+.btn-search{padding:.55rem 1.5rem;background:var(--gold);color:#0a0c0f;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.12em;font-weight:500;transition:all .2s;}
+.btn-search:hover{background:var(--gold2);}
+.btn-clear{padding:.55rem 1rem;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;transition:all .2s;}
+.btn-clear:hover{border-color:var(--muted);color:var(--text);}
+.results-bar{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.12em;color:var(--muted);margin-bottom:1.2rem;display:none;}
+.results-bar span{color:var(--gold);font-weight:500;}
+.members-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1px;background:var(--border2);border:1px solid var(--border2);}
+.member-card{background:var(--card);cursor:pointer;transition:background .15s;overflow:hidden;}
+.member-card:hover{background:#1c2230;}
+.card-header{padding:1.1rem 1.3rem .8rem;border-bottom:1px solid var(--border2);display:flex;align-items:flex-start;gap:.9rem;}
+.rank-badge{flex-shrink:0;width:42px;height:42px;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.7rem;font-weight:500;color:#e8c9c9;border:1px solid rgba(139,26,26,.5);text-align:center;}
+.card-name-area{flex:1;}
+.card-num{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.2em;color:var(--muted);margin-bottom:2px;}
+.card-name{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.05rem;color:var(--text);line-height:1.2;}
+.card-sub{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:.88rem;color:var(--muted2);}
+.card-rank{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;margin-top:3px;}
+.card-tags{padding:.7rem 1.3rem;display:flex;flex-wrap:wrap;gap:.4rem;}
+.tag{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .5rem;border:1px solid var(--border);color:var(--muted2);}
+.tag.lang{border-color:rgba(44,106,159,.4);color:#7ab3d4;}
+.tag.loc{border-color:rgba(201,168,76,.25);color:#bfa85e;}
+.card-foot{padding:.6rem 1.3rem;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.08em;color:var(--muted);border-top:1px solid var(--border2);display:flex;justify-content:space-between;}
+.empty{grid-column:1/-1;text-align:center;padding:4rem 2rem;color:var(--muted);}
+.empty .big{font-size:2.5rem;margin-bottom:1rem;opacity:.3;}
+.empty p{font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.1em;line-height:2;}
+/* DETAIL */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:flex-end;padding:1rem;}
+.overlay.open{display:flex;}
+.detail-panel{width:min(580px,100%);max-height:calc(100vh - 2rem);background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);overflow-y:auto;animation:slideIn .25s ease;}
+@keyframes slideIn{from{transform:translateX(30px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.dp-top{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;z-index:5;}
+.dp-top h3{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;color:var(--gold2);}
+.btn-x{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;width:28px;height:28px;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.btn-x:hover{border-color:var(--red2);color:var(--red2);}
+.dp-body{padding:1.5rem;}
+.ds{margin-bottom:1.5rem;}
+.ds h4{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2);padding-bottom:.4rem;margin-bottom:.8rem;}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.di label{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;}
+.di span{font-size:.82rem;color:var(--text);}
+.langs{display:flex;flex-wrap:wrap;gap:.4rem;}
+.lp{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.08em;padding:.2rem .6rem;border:1px solid rgba(44,106,159,.5);color:#7ab3d4;background:rgba(44,106,159,.08);}
+.rp{font-family:'DM Mono',monospace;font-size:.58rem;padding:.25rem .7rem;border:1px solid rgba(139,26,26,.4);color:#d4a0a0;background:rgba(139,26,26,.08);display:inline-flex;gap:.5rem;}
+.rp span{opacity:.5;}
+.tl{position:relative;padding-left:1.2rem;}
+.tl::before{content:'';position:absolute;left:5px;top:4px;bottom:4px;width:1px;background:var(--border);}
+.ti{position:relative;padding:.4rem 0 .4rem .8rem;border-bottom:1px solid var(--border2);}
+.ti:last-child{border-bottom:none;}
+.ti::before{content:'';position:absolute;left:-5px;top:10px;width:6px;height:6px;border-radius:50%;background:var(--border);border:1px solid var(--border);}
+.ti.ext::before{background:var(--gold);border-color:var(--gold);}
+.ti-place{font-family:'Cormorant Garamond',serif;font-size:.92rem;font-weight:600;color:var(--text);}
+.ti.ext .ti-place{color:var(--gold2);}
+.ti-period{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.08em;color:var(--muted);}
+/* LOADER */
+.loader{position:fixed;inset:0;z-index:200;background:rgba(10,12,15,.93);display:none;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;}
+.loader.show{display:flex;}
+.spin{width:40px;height:40px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader p{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.15em;color:var(--muted);text-align:center;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);}
 </style>
 </head>
 <body>
 
-<div class="loading-bar" id="loading-bar"></div>
+<div class="loader" id="loader">
+  <div class="spin"></div>
+  <p id="lmsg">Procesando PDF…</p>
+</div>
 
-<!-- HEADER -->
 <header>
   <div class="header-inner">
     <div class="escudo">🦅</div>
@@ -473,26 +119,21 @@
       <h1>Escalafón · Rama Diplomática</h1>
       <p>Secretaría de Relaciones Exteriores · Sistema de Consulta</p>
     </div>
-    <div class="pdf-upload-area">
+    <div class="upload-area">
       <div class="pdf-status" id="pdf-status">Carga el PDF del Escalafón<br>para iniciar consultas</div>
-      <button class="btn-upload" onclick="document.getElementById('pdf-input').click()">
-        📄 Cargar PDF
-      </button>
-      <input type="file" id="pdf-input" accept=".pdf" onchange="loadPDF(this)">
+      <button class="btn-upload" onclick="document.getElementById('pdf-input').click()">📄 Cargar PDF</button>
+      <input type="file" id="pdf-input" accept=".pdf" onchange="handlePDF(this)">
     </div>
   </div>
 </header>
 
-<!-- MAIN -->
 <main>
-
-  <!-- SEARCH PANEL -->
   <div class="search-panel">
     <h2>Parámetros de Búsqueda</h2>
     <div class="search-grid">
       <div class="field">
         <label>Nombre / Apellido</label>
-        <input type="text" id="s-name" placeholder="Ej: Hernández, Juan…" oninput="doSearch()">
+        <input type="text" id="s-name" placeholder="Ej: Font, Pérez, Juan…" oninput="doSearch()">
       </div>
       <div class="field">
         <label>Rango Diplomático</label>
@@ -506,6 +147,8 @@
           <option>Tercer Secretario</option>
           <option>Vicecónsul</option>
           <option>Cónsul de Segunda</option>
+          <option>Cónsul de Tercera</option>
+          <option>Cónsul de Cuarta</option>
         </select>
       </div>
       <div class="field">
@@ -514,7 +157,6 @@
           <option value="">— Todos —</option>
           <option>Inglés</option>
           <option>Francés</option>
-          <option>Español</option>
           <option>Ruso</option>
           <option>Alemán</option>
           <option>Italiano</option>
@@ -525,654 +167,392 @@
           <option>Sueco</option>
         </select>
       </div>
-      <div style="display:flex;gap:.5rem;align-items:flex-end;">
+      <div class="btn-row">
         <button class="btn-search" onclick="doSearch()">Buscar</button>
         <button class="btn-clear" onclick="clearSearch()">Limpiar</button>
       </div>
     </div>
   </div>
 
-  <div class="results-summary" id="results-summary" style="display:none">
-    <span>Resultados: <span class="count" id="res-count">0</span> miembros</span>
+  <div class="results-bar" id="rbar">
+    Resultados: <span id="rcount">0</span> miembros encontrados
   </div>
 
-  <!-- MEMBERS GRID -->
-  <div class="members-grid" id="members-grid">
-    <div class="empty-state">
+  <div class="members-grid" id="grid">
+    <div class="empty">
       <div class="big">📋</div>
-      <p>Carga el PDF del Escalafón para visualizar los registros</p>
+      <p>Carga el PDF del Escalafón usando el botón de arriba.<br>
+      Los datos se extraen automáticamente del archivo PDF.</p>
     </div>
   </div>
-
 </main>
 
-<!-- DETAIL OVERLAY -->
-<div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
-  <div class="detail-panel" id="detail-panel">
-    <div class="detail-top">
-      <h3 id="detail-name">—</h3>
-      <button class="btn-close" onclick="closeDetailPanel()">✕</button>
+<div class="overlay" id="overlay" onclick="bgClose(event)">
+  <div class="detail-panel">
+    <div class="dp-top">
+      <h3 id="dtitle">—</h3>
+      <button class="btn-x" onclick="closeDetail()">✕</button>
     </div>
-    <div class="detail-body" id="detail-body"></div>
+    <div class="dp-body" id="dbody"></div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════
-// PDF.js setup
-// ═══════════════════════════════════════════════
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-let allMembers = [];
-let filtered   = [];
+let allMembers = [], filtered = [];
 
-// ═══════════════════════════════════════════════
-// HARDCODED DATA from the uploaded PDF
-// (used immediately; also refreshed when PDF re-loaded)
-// ═══════════════════════════════════════════════
-const HARDCODED = [
-  {
-    num: 1,
-    apellidos: "Font López",
-    nombre: "Edmundo",
-    fullName: "Font López Edmundo",
-    nacimiento: "Tampico, Tamps.",
-    fechaNac: "23-jun.-1953",
-    ingresoSRE: "01/05/1974",
-    ingresoSEM: "01/05/1974",
-    antRelativa: "01/04/1990",
-    depsEcon: 4,
-    antAbsoluta: "47 años 10 meses",
-    escolaridad: "Licenciatura (P.I.)",
-    especialidad: "Lengua y Literatura Hispánica",
-    idiomas: ["Francés","Inglés","Portugués","Árabe","Italiano"],
-    rangoActual: "Embajador",
-    rangos: [
-      { rango:"Embajador", fecha:"01/04/1990" },
-      { rango:"Ministro", fecha:"01/02/1988" },
-      { rango:"Consejero", fecha:"01/03/1983" },
-      { rango:"Primer Secretario", fecha:"01/06/1981" },
-      { rango:"Segundo Secretario", fecha:"01/05/1974" }
-    ],
-    adscripciones: [
-      { lugar:"Malasia", funcion:"Titular", inicio:"01/06/2021", fin:"" },
-      { lugar:"Subsecretaría de Relaciones Exteriores", funcion:"Apoyo", inicio:"02/02/2021", fin:"31/05/2021" },
-      { lugar:"Bolivia", funcion:"Encargado Negocios a.i.", inicio:"03/01/2020", fin:"31/05/2021" },
-      { lugar:"Subsría. para América Latina y el Caribe", funcion:"*", inicio:"05/09/2019", fin:"02/01/2020" },
-      { lugar:"D.G. de Delegaciones", funcion:"Asesor", inicio:"25/10/2018", fin:"04/09/2019" },
-      { lugar:"D.G. Serv. Exterior y Recursos Humanos", funcion:"*", inicio:"27/08/2013", fin:"24/10/2018" },
-      { lugar:"Santa Lucía", funcion:"Titular", inicio:"20/02/2012", fin:"26/08/2013" },
-      { lugar:"D.G. Serv. Exterior y Recursos Humanos", funcion:"Asesor", inicio:"13/09/2011", fin:"19/02/2012" },
-      { lugar:"Acapulco, Gro.", funcion:"Delegado", inicio:"06/09/2004", fin:"12/09/2011" },
-      { lugar:"Secretaría de Relaciones Exteriores", funcion:"*", inicio:"17/04/2003", fin:"03/09/2004" },
-      { lugar:"Unidad de Asuntos Culturales", funcion:"Asesor", inicio:"17/07/2002", fin:"16/04/2003" },
-      { lugar:"D.G. de Protocolo", funcion:"Introductor de Embajadores", inicio:"16/08/2001", fin:"16/07/2002" },
-      { lugar:"Instituto Méx. de Coop. Internacional", funcion:"Asesor", inicio:"09/08/1999", fin:"15/08/2001" },
-      { lugar:"India", funcion:"Titular", inicio:"10/08/1995", fin:"08/08/1999" },
-      { lugar:"Barcelona", funcion:"Titular", inicio:"10/07/1992", fin:"14/07/1995" },
-      { lugar:"Colombia", funcion:"Titular", inicio:"04/07/1989", fin:"08/07/1992" },
-      { lugar:"Italia", funcion:"Jefe de Cancillería", inicio:"25/10/1986", fin:"03/07/1989" },
-      { lugar:"Río de Janeiro", funcion:"Titular", inicio:"11/12/1980", fin:"24/10/1986" },
-      { lugar:"Egipto", funcion:"Asuntos Políticos", inicio:"08/03/1978", fin:"21/11/1980" },
-      { lugar:"El Salvador", funcion:"Agregado Cultural", inicio:"15/05/1974", fin:"23/02/1978" }
-    ]
-  },
-  {
-    num: 2,
-    apellidos: "Piña Rojas",
-    nombre: "José Ignacio",
-    fullName: "Piña Rojas José Ignacio",
-    nacimiento: "México, D.F.",
-    fechaNac: "12-mar.-1954",
-    ingresoSRE: "01/08/1974",
-    ingresoSEM: "01/05/1980",
-    antRelativa: "21/03/1993",
-    depsEcon: 3,
-    antAbsoluta: "47 años 7 meses",
-    escolaridad: "Licenciatura (P.I.)",
-    especialidad: "Relaciones Internacionales",
-    idiomas: ["Inglés","Francés"],
-    rangoActual: "Embajador",
-    rangos: [
-      { rango:"Embajador", fecha:"21/03/1993" },
-      { rango:"Ministro", fecha:"16/10/1989" },
-      { rango:"Consejero", fecha:"01/09/1986" },
-      { rango:"Primer Secretario", fecha:"16/10/1983" },
-      { rango:"Segundo Secretario", fecha:"01/02/1982" },
-      { rango:"Tercer Secretario", fecha:"01/05/1980" }
-    ],
-    adscripciones: [
-      { lugar:"Jubilación por Años de Servicio", funcion:"*", inicio:"01/07/2022", fin:"" },
-      { lugar:"Licencia Prejubilatoria", funcion:"*", inicio:"01/04/2022", fin:"30/06/2022" },
-      { lugar:"Brasil", funcion:"Titular", inicio:"03/06/2019", fin:"" },
-      { lugar:"Panamá", funcion:"Titular", inicio:"01/02/2015", fin:"02/06/2019" },
-      { lugar:"República Dominicana", funcion:"Titular", inicio:"01/08/2011", fin:"30/01/2015" },
-      { lugar:"Secretaría de Relaciones Exteriores", funcion:"Embajador", inicio:"18/04/2011", fin:"31/07/2011" },
-      { lugar:"D.G. para América Latina y el Caribe", funcion:"Director General", inicio:"01/10/2007", fin:"15/04/2011" },
-      { lugar:"Cuba", funcion:"Titular", inicio:"05/09/2005", fin:"14/09/2007" },
-      { lugar:"Panamá", funcion:"Titular", inicio:"24/09/2001", fin:"02/09/2005" },
-      { lugar:"Perú", funcion:"Titular", inicio:"09/06/1999", fin:"21/09/2001" },
-      { lugar:"El Salvador", funcion:"Titular", inicio:"10/04/1995", fin:"05/06/1999" },
-      { lugar:"D.G. Serv. Exterior y Recursos Humanos", funcion:"Director General", inicio:"04/01/1990", fin:"07/04/1995" },
-      { lugar:"Oficialía Mayor", funcion:"Secretario(a) Particular", inicio:"01/03/1989", fin:"03/01/1990" },
-      { lugar:"Austria", funcion:"Representante Alterno", inicio:"21/04/1986", fin:"28/02/1989" },
-      { lugar:"Unidad de Comunicaciones al Exterior", funcion:"Director de la Unidad", inicio:"16/05/1983", fin:"17/04/1986" },
-      { lugar:"Subsecretaría Asuntos Culturales", funcion:"Secretario(a) Particular del Subsec.", inicio:"16/07/1981", fin:"15/05/1983" },
-      { lugar:"D.G. de Asuntos Culturales", funcion:"Jefe de Departamento", inicio:"16/04/1981", fin:"15/07/1981" },
-      { lugar:"Coordinación Estudios Internacionales", funcion:"Asesor", inicio:"01/07/1979", fin:"15/04/1981" },
-      { lugar:"D.J. Asuntos y Estudios Int. Especiales", funcion:"Asesor", inicio:"01/10/1978", fin:"30/06/1979" },
-      { lugar:"D.G. de Organismos Internacionales", funcion:"Asesor", inicio:"01/08/1974", fin:"30/09/1978" }
-    ]
-  },
-  {
-    num: 3,
-    apellidos: "Pérez Bravo",
-    nombre: "Alfredo Rogerio",
-    fullName: "Pérez Bravo Alfredo Rogerio",
-    nacimiento: "México, D.F.",
-    fechaNac: "30-dic.-1956",
-    ingresoSRE: "15/02/1976",
-    ingresoSEM: "01/05/1980",
-    antRelativa: "15/03/1994",
-    depsEcon: 3,
-    antAbsoluta: "46 años 1 mes",
-    escolaridad: "Licenciatura",
-    especialidad: "Relaciones Internacionales",
-    idiomas: ["Inglés","Francés","Japonés","Ruso","Sueco"],
-    rangoActual: "Embajador",
-    rangos: [
-      { rango:"Embajador", fecha:"15/03/1994" },
-      { rango:"Ministro", fecha:"01/07/1989" },
-      { rango:"Consejero", fecha:"01/09/1986" },
-      { rango:"Primer Secretario", fecha:"16/10/1983" },
-      { rango:"Segundo Secretario", fecha:"01/02/1982" },
-      { rango:"Tercer Secretario", fecha:"01/05/1980" }
-    ],
-    adscripciones: [
-      { lugar:"Nueva Zelanda", funcion:"Titular", inicio:"04/10/2019", fin:"" },
-      { lugar:"Portugal", funcion:"Titular", inicio:"27/04/2015", fin:"03/10/2019" },
-      { lugar:"Oficinas del C. Secretario", funcion:"Asesor Especial del Secretario de Rel. Ext.", inicio:"16/03/2014", fin:"26/04/2015" },
-      { lugar:"D.G. de Protocolo", funcion:"Director General", inicio:"23/04/2012", fin:"15/03/2014" },
-      { lugar:"Federación de Rusia", funcion:"Titular", inicio:"25/08/2007", fin:"22/04/2012" },
-      { lugar:"Malasia", funcion:"Titular", inicio:"15/10/2001", fin:"17/08/2007" },
-      { lugar:"Panamá", funcion:"Titular", inicio:"08/12/1998", fin:"16/09/2001" },
-      { lugar:"D.G. de Cooperación Técnica y Científica", funcion:"Director General", inicio:"16/01/1995", fin:"15/09/1998" },
-      { lugar:"Argelia", funcion:"Titular/Embajador Itinerante para Africa", inicio:"19/11/1991", fin:"31/03/1994" },
-      { lugar:"Estados Unidos", funcion:"Política/Administrativa", inicio:"01/07/1987", fin:"17/03/1989" },
-      { lugar:"Suecia", funcion:"Jefe de Cancillería", inicio:"24/10/1983", fin:"30/06/1987" }
-    ]
-  },
-  {
-    num: 4,
-    apellidos: "Del Río López",
-    nombre: "Francisco Eduardo",
-    fullName: "Del Río López Francisco Eduardo",
-    nacimiento: "Francia",
-    fechaNac: "12-oct.-1957",
-    ingresoSRE: "01/11/1977",
-    ingresoSEM: "01/05/1980",
-    antRelativa: "30/06/1998",
-    depsEcon: 2,
-    antAbsoluta: "44 años 4 meses",
-    escolaridad: "Licenciatura (P.I.)",
-    especialidad: "Economía",
-    idiomas: ["Francés","Inglés","Italiano","Portugués"],
-    rangoActual: "Embajador",
-    rangos: [
-      { rango:"Embajador", fecha:"30/06/1998" },
-      { rango:"Ministro", fecha:"01/01/1991" },
-      { rango:"Consejero", fecha:"01/09/1986" },
-      { rango:"Primer Secretario", fecha:"16/10/1983" },
-      { rango:"Segundo Secretario", fecha:"01/03/1982" },
-      { rango:"Tercer Secretario", fecha:"01/05/1980" },
-      { rango:"Agregado Admvo. "C"", fecha:"01/11/1977" }
-    ],
-    adscripciones: [
-      { lugar:"Suecia", funcion:"Titular", inicio:"15/07/2019", fin:"" },
-      { lugar:"Subsecretaría de Relaciones Exteriores", funcion:"Asesor", inicio:"01/01/2019", fin:"14/07/2019" },
-      { lugar:"D.G. para Europa", funcion:"Director General", inicio:"26/02/2016", fin:"31/12/2018" },
-      { lugar:"Montreal", funcion:"Titular", inicio:"01/07/2013", fin:"25/02/2016" },
-      { lugar:"Argentina", funcion:"Titular", inicio:"21/08/2009", fin:"30/06/2013" },
-      { lugar:"D.G. de Protocolo", funcion:"Director General", inicio:"02/01/2007", fin:"21/08/2009" },
-      { lugar:"Bélgica-UE", funcion:"Representante Alterno", inicio:"07/01/2005", fin:"31/12/2006" },
-      { lugar:"Nicaragua", funcion:"Titular", inicio:"17/04/2001", fin:"22/12/2004" },
-      { lugar:"D.G. de Protocolo", funcion:"Director General", inicio:"03/07/1999", fin:"16/01/2001" },
-      { lugar:"Francia", funcion:"Jefe de Cancillería", inicio:"23/01/1989", fin:"01/07/1991" },
-      { lugar:"España", funcion:"Jefe de Cancillería", inicio:"03/07/1991", fin:"15/06/1995" },
-      { lugar:"Estados Unidos", funcion:"Jefe de Cancillería", inicio:"16/06/1995", fin:"30/04/1998" }
-    ]
-  },
-  {
-    num: 5,
-    apellidos: "Ruiz-Cabañas Izquierdo",
-    nombre: "Miguel",
-    fullName: "Ruiz-Cabañas Izquierdo Miguel",
-    nacimiento: "México, D.F.",
-    fechaNac: "12-ene.-1957",
-    ingresoSRE: "01/01/1979",
-    ingresoSEM: "01/01/1979",
-    antRelativa: "30/06/1998",
-    depsEcon: 3,
-    antAbsoluta: "41 años 2 meses",
-    escolaridad: "Licenciatura / Maestría",
-    especialidad: "Relaciones Internacionales / Ciencias Políticas",
-    idiomas: ["Inglés","Francés","Japonés","Italiano"],
-    rangoActual: "Embajador",
-    rangos: [
-      { rango:"Embajador", fecha:"30/06/1998" },
-      { rango:"Ministro", fecha:"01/01/1991" },
-      { rango:"Consejero", fecha:"01/07/1989" },
-      { rango:"Primer Secretario", fecha:"01/06/1985" },
-      { rango:"Segundo Secretario", fecha:"01/03/1982" },
-      { rango:"Tercer Secretario", fecha:"01/04/1980" },
-      { rango:"Vicecónsul", fecha:"01/01/1979" }
-    ],
-    adscripciones: [
-      { lugar:"Tecnológico de Monterrey", funcion:"Comisionado", inicio:"01/08/2019", fin:"31/07/2022" },
-      { lugar:"Pacto Mundial para la Migración Segura", funcion:"Asesor", inicio:"29/11/2018", fin:"31/07/2019" },
-      { lugar:"Subsría. para Asuntos Multilat. y Derechos Hum.", funcion:"Subsecretario", inicio:"15/09/2015", fin:"27/11/2018" },
-      { lugar:"Italia", funcion:"Titular", inicio:"29/08/2011", fin:"14/09/2015" },
-      { lugar:"Japón", funcion:"Titular", inicio:"22/07/2004", fin:"28/08/2011" },
-      { lugar:"O.E.A.", funcion:"Representante Permanente", inicio:"24/02/2001", fin:"21/07/2004" },
-      { lugar:"D.G. Para América del Norte", funcion:"Director General", inicio:"16/05/1999", fin:"31/01/2001" },
-      { lugar:"Estados Unidos", funcion:"Asuntos Sociales y Fronterizos", inicio:"03/02/1993", fin:"31/08/1995" }
-    ]
-  },
-  {
-    num: 6,
-    apellidos: "Pujalte Piñeiro",
-    nombre: "Carlos",
-    fullName: "Pujalte Piñeiro Carlos",
-    nacimiento: "México, D.F.",
-    fechaNac: "07-jun.-1953",
-    ingresoSRE: "01/05/1980",
-    ingresoSEM: "01/06/1981",
-    antRelativa: "23/01/2000",
-    depsEcon: 4,
-    antAbsoluta: "41 años 10 meses",
-    escolaridad: "Licenciatura",
-    especialidad: "Derecho",
-    idiomas: ["Inglés","Francés","Alemán","Japonés"],
-    rangoActual: "Embajador",
-    rangos: [
-      { rango:"Embajador", fecha:"23/01/2000" },
-      { rango:"Ministro", fecha:"01/11/1991" },
-      { rango:"Consejero", fecha:"01/01/1991" },
-      { rango:"Cónsul de Segunda", fecha:"01/02/1988" },
-      { rango:"Cónsul de Tercera", fecha:"16/07/1985" },
-      { rango:"Cónsul de Cuarta", fecha:"01/06/1981" },
-      { rango:"Vicecónsul Prov.", fecha:"01/05/1980" }
-    ],
-    adscripciones: [
-      { lugar:"Jubilación por Años de Servicio", funcion:"*", inicio:"22/07/2022", fin:"" },
-      { lugar:"Dinamarca", funcion:"Titular", inicio:"23/11/2017", fin:"" },
-      { lugar:"Paraguay", funcion:"Titular", inicio:"20/01/2014", fin:"31/03/2016" },
-      { lugar:"Venezuela", funcion:"Titular", inicio:"18/02/2010", fin:"13/06/2012" },
-      { lugar:"Toronto", funcion:"Titular", inicio:"26/04/2004", fin:"16/02/2010" },
-      { lugar:"O.N.U.", funcion:"Representante Alterno", inicio:"25/11/2002", fin:"25/04/2004" },
-      { lugar:"Costa Rica", funcion:"Titular", inicio:"24/04/2000", fin:"16/11/2002" },
-      { lugar:"D.G. de Asuntos Jurídicos", funcion:"Director General", inicio:"01/04/1995", fin:"31/03/2000" },
-      { lugar:"O.E.A.", funcion:"Representante Alterno", inicio:"14/09/1992", fin:"17/03/1995" },
-      { lugar:"Estados Unidos", funcion:"Asuntos Jurídicos", inicio:"20/05/1985", fin:"31/08/1989" },
-      { lugar:"Nueva York", funcion:"Protección", inicio:"21/07/1981", fin:"17/05/1985" }
-    ]
-  },
-  {
-    num: 7,
-    apellidos: "Salas Lotfe",
-    nombre: "Federico",
-    fullName: "Salas Lotfe Federico",
-    nacimiento: "México, D.F.",
-    fechaNac: "18-sep.-1955",
-    ingresoSRE: "01/06/1983",
-    ingresoSEM: "01/04/1991",
-    antRelativa: "23/01/2000",
-    depsEcon: 0,
-    antAbsoluta: "38 años 9 meses",
-    escolaridad: "Licenciatura / Maestría",
-    especialidad: "Ciencias Políticas",
-    idiomas: ["Inglés","Francés","Checo"],
-    rangoActual: "Embajador",
-    rangos: [
-      { rango:"Embajador", fecha:"23/01/2000" },
-      { rango:"Ministro", fecha:"01/10/1993" },
-      { rango:"Consejero", fecha:"01/01/1993" },
-      { rango:"Primer Secretario", fecha:"01/11/1991" },
-      { rango:"Segundo Secretario", fecha:"01/07/1991" },
-      { rango:"Tercer Secretario", fecha:"01/04/1991" }
-    ],
-    adscripciones: [
-      { lugar:"India", funcion:"Titular", inicio:"17/09/2019", fin:"" },
-      { lugar:"U.N.E.S.C.O.", funcion:"Representante Permanente", inicio:"07/12/2017", fin:"16/09/2019" },
-      { lugar:"Indonesia", funcion:"Titular", inicio:"22/04/2015", fin:"06/12/2017" },
-      { lugar:"Israel", funcion:"Titular", inicio:"07/06/2007", fin:"21/04/2015" },
-      { lugar:"República Checa", funcion:"Titular", inicio:"26/05/2001", fin:"06/06/2007" },
-      { lugar:"Estados Unidos", funcion:"Asuntos Políticos/Rel. Congreso", inicio:"15/01/1993", fin:"28/03/1998" },
-      { lugar:"O.N.U.", funcion:"Asuntos Políticos", inicio:"02/05/1989", fin:"14/01/1993" },
-      { lugar:"D.G. de Organismos Internacionales", funcion:"Director General", inicio:"01/02/1988", fin:"15/12/1988" },
-      { lugar:"D.G. para la O.N.U.", funcion:"Subdirector", inicio:"01/06/1983", fin:"31/01/1988" }
-    ]
-  },
-  {
-    num: 8,
-    apellidos: "Gómez-Robledo Verduzco",
-    nombre: "Juan Manuel",
-    fullName: "Gómez-Robledo Verduzco Juan Manuel",
-    nacimiento: "México, D.F.",
-    fechaNac: "05-mar.-1959",
-    ingresoSRE: "01/09/1982",
-    ingresoSEM: "01/05/1990",
-    antRelativa: "21/05/2001",
-    depsEcon: 5,
-    antAbsoluta: "36 años 1 mes",
-    escolaridad: "Licenciatura / Maestría (x2) / Doctorado",
-    especialidad: "Derecho / Derecho Internacional Público / Relaciones Internacionales",
-    idiomas: ["Inglés","Francés","Italiano"],
-    rangoActual: "Embajador",
-    rangos: [
-      { rango:"Embajador", fecha:"21/05/2001" },
-      { rango:"Ministro", fecha:"01/01/1998" },
-      { rango:"Consejero", fecha:"01/02/1994" },
-      { rango:"Primer Secretario", fecha:"01/11/1991" },
-      { rango:"Segundo Secretario", fecha:"01/01/1991" },
-      { rango:"Tercer Secretario", fecha:"01/05/1990" },
-      { rango:"Agregado Diplomático Prov.", fecha:"01/12/1989" }
-    ],
-    adscripciones: [
-      { lugar:"O.N.U.", funcion:"Representante Permanente Alterno", inicio:"06/09/2021", fin:"" },
-      { lugar:"Francia", funcion:"Titular", inicio:"04/01/2016", fin:"05/09/2021" },
-      { lugar:"Subsría. para Asuntos Multilat. y Derechos Hum.", funcion:"Subsecretario", inicio:"11/12/2006", fin:"03/01/2016" },
-      { lugar:"O.N.U.", funcion:"Representante Alterno", inicio:"16/03/2004", fin:"08/12/2006" },
-      { lugar:"Consultoría Jurídica", funcion:"Consultor Jurídico", inicio:"06/01/2001", fin:"03/02/2004" },
-      { lugar:"O.E.A.", funcion:"Representante Alterno", inicio:"07/05/1998", fin:"05/01/2001" },
-      { lugar:"Secretaría Particular del C. Srio.", funcion:"Secretario(a) Particular", inicio:"12/01/1994", fin:"14/01/1995" }
-    ]
-  },
-  {
-    num: 9,
-    apellidos: "Macedo Riba",
-    nombre: "Pablo",
-    fullName: "Macedo Riba Pablo",
-    nacimiento: "México, D.F.",
-    fechaNac: "23-feb.-1958",
-    ingresoSRE: "16/02/1980",
-    ingresoSEM: "01/06/1983",
-    antRelativa: "14/12/2001",
-    depsEcon: 0,
-    antAbsoluta: "42 años 1 mes",
-    escolaridad: "Licenciatura / Maestría",
-    especialidad: "Derecho / Administración Militar para la Seguridad y Defensa Nacionales",
-    idiomas: ["Francés","Inglés","Alemán","Ruso"],
-    rangoActual: "Embajador",
-    rangos: [
-      { rango:"Embajador", fecha:"14/12/2001" },
-      { rango:"Ministro", fecha:"01/01/1993" },
-      { rango:"Consejero", fecha:"01/11/1991" },
-      { rango:"Primer Secretario", fecha:"01/04/1990" },
-      { rango:"Segundo Secretario", fecha:"01/09/1986" },
-      { rango:"Tercer Secretario", fecha:"01/06/1983" },
-      { rango:"Vicecónsul", fecha:"01/04/1982" }
-    ],
-    adscripciones: [
-      { lugar:"Hong Kong", funcion:"Titular", inicio:"20/06/2021", fin:"" },
-      { lugar:"Israel", funcion:"Titular", inicio:"26/06/2017", fin:"19/06/2021" },
-      { lugar:"República Checa", funcion:"Titular", inicio:"24/07/2013", fin:"25/06/2017" },
-      { lugar:"Instituto Matías Romero", funcion:"Director General", inicio:"16/06/2011", fin:"23/07/2013" },
-      { lugar:"D.G. Organización de las Naciones Unidas", funcion:"Director General", inicio:"02/07/2007", fin:"21/11/2010" },
-      { lugar:"O.I.", funcion:"Representante Alterno", inicio:"04/02/2002", fin:"29/06/2007" },
-      { lugar:"O.N.U.", funcion:"Asuntos Políticos y Multilaterales", inicio:"27/01/1993", fin:"01/02/2002" },
-      { lugar:"D.G. para la O.N.U.", funcion:"Jefe de Departamento", inicio:"16/02/1980", fin:"10/06/1983" }
-    ]
-  }
-];
-
-// ═══════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════
-function init() {
-  allMembers = HARDCODED;
-  filtered = [...allMembers];
-  renderGrid(filtered);
-  updateStatus(`${allMembers.length} miembros cargados (datos del PDF)`);
-}
-
-// ═══════════════════════════════════════════════
-// PDF LOADING — re-parses when new file uploaded
-// (basic text extraction; structured data is preferred from hardcoded)
-// ═══════════════════════════════════════════════
-async function loadPDF(input) {
+// ── PDF LOADING ────────────────────────────────────────────
+async function handlePDF(input) {
   const file = input.files[0];
   if (!file) return;
-  setLoading(true);
+  input.value = '';
+  showLoader('Leyendo PDF…');
+  setStatus('Procesando…');
+
   try {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let fullText = '';
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    const pages = [];
+
     for (let i = 1; i <= pdf.numPages; i++) {
+      setLoader(`Extrayendo página ${i} / ${pdf.numPages}…`);
       const page = await pdf.getPage(i);
-      const tc = await page.getTextContent();
-      fullText += tc.items.map(x => x.str).join(' ') + '\n';
+      const tc   = await page.getTextContent();
+      const items = tc.items.map(it => ({
+        str: it.str,
+        x: Math.round(it.transform[4]),
+        y: Math.round(it.transform[5])
+      }));
+      pages.push(items);
     }
-    // PDF loaded successfully — keep hardcoded structured data but confirm
-    updateStatus(`PDF cargado: ${pdf.numPages} páginas · ${allMembers.length} miembros`, true);
+
+    setLoader('Analizando registros…');
+    await new Promise(r => setTimeout(r, 30));
+
+    allMembers = parsePages(pages);
+    filtered   = [...allMembers];
+
+    if (!allMembers.length) {
+      setStatus('⚠ No se encontraron registros', false, true);
+    } else {
+      setStatus(`✓ ${allMembers.length} miembros · ${pdf.numPages} páginas`, true);
+      renderGrid(filtered);
+    }
   } catch(e) {
-    updateStatus('Error al leer PDF', false, true);
+    console.error(e);
+    setStatus('✕ Error al procesar el PDF', false, true);
   }
-  setLoading(false);
+  hideLoader();
 }
 
-function updateStatus(msg, ok=false, err=false) {
-  const el = document.getElementById('pdf-status');
-  el.textContent = msg;
-  el.className = 'pdf-status' + (ok ? ' loaded' : err ? ' error' : '');
+// ── PARSER ────────────────────────────────────────────────
+function parsePages(pages) {
+  const members = [];
+
+  for (const pageItems of pages) {
+    if (!pageItems.length) continue;
+
+    // Group items into line-buckets by Y coordinate (±4px tolerance)
+    const buckets = {};
+    for (const it of pageItems) {
+      if (!it.str.trim()) continue;
+      const key = Math.round(it.y / 4) * 4;
+      if (!buckets[key]) buckets[key] = [];
+      buckets[key].push(it);
+    }
+
+    // Sort Y keys descending (PDF origin bottom-left)
+    const yKeys = Object.keys(buckets).map(Number).sort((a, b) => b - a);
+
+    // Build line objects sorted by X
+    const lines = yKeys.map(y => {
+      const sorted = buckets[y].sort((a, b) => a.x - b.x);
+      return { y, text: sorted.map(i => i.str).join(' ').replace(/\s+/g,' ').trim(), items: sorted };
+    }).filter(l => l.text.length > 0);
+
+    if (!lines.length) continue;
+
+    // ── Identify page mid-X to separate left (adscripciones) from right (rangos) columns
+    const allX = pageItems.map(i => i.x);
+    const minX = Math.min(...allX), maxX = Math.max(...allX);
+    const midX = minX + (maxX - minX) * 0.55; // right column starts after ~55%
+
+    // ── First line must match "NUMBER NAME" pattern
+    const header = lines[0].text.match(/^(\d+)\s+([A-ZÁÉÍÓÚÜÑ\-][A-ZÁÉÍÓÚÜÑ\s\-]+[A-ZÁÉÍÓÚÜÑ])\s+([A-Z][a-záéíóúüñA-Z\s\-]+)$/);
+    // Also try simpler pattern: "N ANYTHING"
+    const headerSimple = lines[0].text.match(/^(\d+)\s+(.+)$/);
+    if (!headerSimple) continue;
+
+    const num     = parseInt(headerSimple[1]);
+    const rawName = headerSimple[2].trim();
+
+    // Skip page numbers (single digits at end)
+    if (rawName.match(/^\d{1,3}$/) || num > 9999) continue;
+
+    const mem = {
+      num, rawName,
+      nacimiento:'', fechaNac:'', ingresoSRE:'', ingresoSEM:'',
+      antRelativa:'', depsEcon:'', antAbsoluta:'',
+      escolaridad:'', especialidad:'',
+      idiomas:[], rangos:[], adscripciones:[],
+      rangoActual:''
+    };
+
+    // ── Extract right-column rank lines
+    for (const line of lines) {
+      const rightText = line.items
+        .filter(i => i.x >= midX)
+        .map(i => i.str).join(' ').trim();
+      if (!rightText) continue;
+
+      const rm = rightText.match(/^(Embajador|Ministro|Consejero|Primer Secretario|Segundo Secretario|Tercer Secretario|Vicec[oó]nsul[\w\s.]*?|C[oó]nsul de \w+|Agregado[\w\s".]*?)\s+(\d{2}\/\d{2}\/\d{4})$/);
+      if (rm) {
+        const rango = rm[1].trim();
+        if (!mem.rangos.find(r => r.rango === rango)) {
+          mem.rangos.push({ rango, fecha: rm[2] });
+        }
+      }
+    }
+
+    // ── Extract metadata from full text
+    const full = lines.map(l => l.text).join('\n');
+
+    let m;
+    m = full.match(/LUGAR DE NACIMIENTO:\s*(.+?)\s{2,}FECHA DE NACIMIENTO:\s*(.+)/);
+    if (m) { mem.nacimiento = m[1].trim(); mem.fechaNac = m[2].trim(); }
+
+    m = full.match(/ESCOLARIDAD:\s*(.+?)\s{2,}ESPECIALIDAD:\s*(.+)/);
+    if (m) { mem.escolaridad = m[1].trim(); mem.especialidad = m[2].trim(); }
+
+    m = full.match(/INGRESO A LA SRE:\s*(\d{2}\/\d{2}\/\d{4})/);
+    if (m) mem.ingresoSRE = m[1];
+
+    m = full.match(/INGRESO AL SEM:\s*(\d{2}\/\d{2}\/\d{4})/);
+    if (m) mem.ingresoSEM = m[1];
+
+    m = full.match(/ANT\. RELATIVA:\s*(\d{2}\/\d{2}\/\d{4})/);
+    if (m) mem.antRelativa = m[1];
+
+    m = full.match(/DEPS\. ECONOMICOS:\s*(\d+)/);
+    if (m) mem.depsEcon = m[1];
+
+    m = full.match(/ANT\. ABSOLUTA:\s*(\d+\s+A[ÑN]OS\s+\d+\s+MESES)/i);
+    if (m) mem.antAbsoluta = m[1].trim();
+
+    // ── Idiomas — match lines starting with known language word + level code
+    const LANG_LIST = ['Inglés','Francés','Español','Ruso','Alemán','Italiano',
+                       'Japonés','Portugués','Arabe','Árabe','Checo','Sueco','Mandarín'];
+    for (const line of lines) {
+      for (const lang of LANG_LIST) {
+        if (new RegExp(`^${lang}\\s+[A-Z]/[A-Z]`).test(line.text)) {
+          const norm = lang === 'Arabe' ? 'Árabe' : lang;
+          if (!mem.idiomas.includes(norm)) mem.idiomas.push(norm);
+        }
+      }
+    }
+
+    // ── Adscripciones — lines with 1+ dates, not header/metadata lines
+    const DATE_RE = /\d{2}\/\d{2}\/\d{4}/g;
+    const SKIP_WORDS = ['LUGAR','FECHA','ESCOLARIDAD','ESPECIALIDAD','INGRESO',
+                        'ANT.','DEPS.','TIEMPO','ADSCRIPCION','PUESTO','PERIODO'];
+    const RANK_START = /^(Embajador|Ministro|Consejero|Primer|Segundo|Tercer|Vicec|Cón|Con\s|Agr)/;
+
+    for (const line of lines) {
+      const txt = line.text;
+      if (!DATE_RE.test(txt)) { DATE_RE.lastIndex = 0; continue; }
+      DATE_RE.lastIndex = 0;
+      if (SKIP_WORDS.some(w => txt.includes(w))) continue;
+      if (RANK_START.test(txt)) continue;
+
+      const dates = [...(txt.matchAll(/\d{2}\/\d{2}\/\d{4}/g))].map(d => d[0]);
+
+      // Build texto from LEFT column items only
+      const leftItems = line.items.filter(i => i.x < midX);
+      let texto = leftItems.map(i => i.str).join(' ').replace(/\s+/g,' ').trim();
+      // Remove any dates that bled in
+      texto = texto.replace(/\d{2}\/\d{2}\/\d{4}/g, '').trim();
+      // Remove trailing rank words that may have bled
+      texto = texto.replace(/\s+(Embajador|Ministro|Consejero|Primer Secretario|Segundo Secretario|Tercer Secretario)$/, '').trim();
+
+      if (!texto || texto.length < 3) continue;
+
+      mem.adscripciones.push({
+        texto,
+        inicio: dates[0] || '',
+        fin:    dates[1] || ''
+      });
+    }
+
+    if (mem.rangos.length) mem.rangoActual = mem.rangos[0].rango;
+
+    members.push(mem);
+  }
+
+  return members;
 }
 
-function setLoading(v) {
-  const bar = document.getElementById('loading-bar');
-  bar.className = 'loading-bar' + (v ? ' active' : '');
+// ── RENDER ────────────────────────────────────────────────
+const ABBR = {
+  'Embajador':'EMB','Ministro':'MIN','Consejero':'CON',
+  'Primer Secretario':'1SEC','Segundo Secretario':'2SEC',
+  'Tercer Secretario':'3SEC','Vicecónsul':'VCE',
+  'Cónsul de Segunda':'CÓN2','Cónsul de Tercera':'CÓN3',
+  'Cónsul de Cuarta':'CÓN4'
+};
+
+function splitName(rawName) {
+  // All-caps tokens = apellidos, rest = nombre
+  const tokens = rawName.split(' ');
+  let ap = [], nm = [], inNombre = false;
+  for (const t of tokens) {
+    if (!inNombre && t === t.toUpperCase() && /^[A-ZÁÉÍÓÚÑÜ]/.test(t)) ap.push(t);
+    else { inNombre = true; nm.push(t); }
+  }
+  return { ap: ap.join(' '), nm: nm.join(' ') };
 }
 
-// ═══════════════════════════════════════════════
-// SEARCH
-// ═══════════════════════════════════════════════
+function isExt(texto) {
+  if (!texto) return false;
+  const w = texto.split(' ')[0];
+  return w.length > 1 && w === w.toUpperCase() && /^[A-ZÁÉÍÓÚÑÜ]/.test(w);
+}
+
+function renderGrid(list) {
+  const grid = document.getElementById('grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty"><div class="big">🔍</div>
+      <p>No se encontraron miembros con los criterios indicados.</p></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(m => {
+    const abbr = ABBR[m.rangoActual] || (m.rangoActual || '').substring(0,3).toUpperCase() || '—';
+    const {ap, nm} = splitName(m.rawName);
+    const lastAdscr = m.adscripciones[0];
+    const loc = lastAdscr ? lastAdscr.texto.split(' ').slice(0,3).join(' ') : '';
+    return `<div class="member-card" onclick="showDetail(${m.num})">
+      <div class="card-header">
+        <div class="rank-badge">${abbr}</div>
+        <div class="card-name-area">
+          <div class="card-num">Nº ${m.num}</div>
+          <div class="card-name">${ap || m.rawName}</div>
+          ${nm ? `<div class="card-sub">${nm}</div>` : ''}
+          <div class="card-rank">${m.rangoActual || '—'}</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        ${m.idiomas.slice(0,5).map(l=>`<span class="tag lang">${l}</span>`).join('')}
+        ${loc ? `<span class="tag loc">📍 ${loc}</span>` : ''}
+      </div>
+      <div class="card-foot">
+        <span>SEM: ${m.ingresoSEM||'—'}</span>
+        <span>${m.antAbsoluta||'—'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SEARCH ────────────────────────────────────────────────
 function doSearch() {
+  if (!allMembers.length) return;
   const name = document.getElementById('s-name').value.trim().toLowerCase();
   const rank = document.getElementById('s-rank').value;
   const lang = document.getElementById('s-lang').value;
 
   filtered = allMembers.filter(m => {
-    const matchName = !name ||
-      m.fullName.toLowerCase().includes(name) ||
-      m.apellidos.toLowerCase().includes(name) ||
-      m.nombre.toLowerCase().includes(name);
-
-    const matchRank = !rank ||
-      m.rangoActual === rank ||
-      m.rangos.some(r => r.rango === rank);
-
-    const matchLang = !lang ||
-      m.idiomas.some(i => i.toLowerCase().includes(lang.toLowerCase()));
-
+    const matchName = !name || m.rawName.toLowerCase().includes(name);
+    const matchRank = !rank || m.rangoActual === rank ||
+                      m.rangos.some(r => r.rango === rank);
+    const matchLang = !lang || m.idiomas.some(i =>
+      i.toLowerCase().includes(lang.toLowerCase()));
     return matchName && matchRank && matchLang;
   });
 
   renderGrid(filtered);
-  const summary = document.getElementById('results-summary');
-  summary.style.display = 'flex';
-  document.getElementById('res-count').textContent = filtered.length;
+  const bar = document.getElementById('rbar');
+  bar.style.display = 'block';
+  document.getElementById('rcount').textContent = filtered.length;
 }
 
 function clearSearch() {
   document.getElementById('s-name').value = '';
   document.getElementById('s-rank').value = '';
   document.getElementById('s-lang').value = '';
+  if (!allMembers.length) return;
   filtered = [...allMembers];
   renderGrid(filtered);
-  document.getElementById('results-summary').style.display = 'none';
+  document.getElementById('rbar').style.display = 'none';
 }
 
-// ═══════════════════════════════════════════════
-// RENDER GRID
-// ═══════════════════════════════════════════════
-const COUNTRIES = new Set([
-  'Malasia','Bolivia','Santa Lucía','India','Barcelona','Colombia',
-  'Italia','Egipto','El Salvador','Río de Janeiro','Brasil','Panamá',
-  'República Dominicana','Cuba','Perú','Austria','Nueva Zelanda',
-  'Portugal','Federación de Rusia','Argelia','Suecia','Estados Unidos',
-  'Argentina','Montreal','Nicaragua','Francia','España','Dinamarca',
-  'Paraguay','Venezuela','Toronto','Costa Rica','Indonesia','Israel',
-  'República Checa','Japón','Hong Kong','India','Bolivia','Malasia',
-  'Italia','India'
-]);
-
-function isPosting(lugar) {
-  return COUNTRIES.has(lugar) || /^[A-Z][A-Z]/.test(lugar);
-}
-
-function renderGrid(members) {
-  const grid = document.getElementById('members-grid');
-  if (!members.length) {
-    grid.innerHTML = `<div class="empty-state">
-      <div class="big">🔍</div>
-      <p>No se encontraron miembros con los criterios indicados</p>
-    </div>`;
-    return;
-  }
-
-  grid.innerHTML = members.map(m => {
-    const lastPosting = m.adscripciones.find(a =>
-      COUNTRIES.has(a.lugar) && a.fin === ''
-    ) || m.adscripciones[0];
-
-    const rankInitials = {
-      'Embajador':'EMB','Ministro':'MIN','Consejero':'CON',
-      'Primer Secretario':'1ER','Segundo Secretario':'2DO',
-      'Tercer Secretario':'3ER','Vicecónsul':'VCE'
-    };
-    const badgeText = rankInitials[m.rangoActual] || m.rangoActual.substring(0,3).toUpperCase();
-
-    return `<div class="member-card" onclick="showDetail(${m.num})">
-      <div class="card-header">
-        <div class="rank-badge">${badgeText}</div>
-        <div class="card-name-area">
-          <div class="card-num">Nº ${m.num}</div>
-          <div class="card-name">${m.apellidos}</div>
-          <div class="card-name" style="font-weight:300;font-size:.88rem">${m.nombre}</div>
-          <div class="card-rank">${m.rangoActual}</div>
-        </div>
-      </div>
-      <div class="card-meta">
-        ${m.idiomas.slice(0,4).map(l => `<span class="tag lang">${l}</span>`).join('')}
-        ${lastPosting ? `<span class="tag loc">📍 ${lastPosting.lugar}</span>` : ''}
-      </div>
-      <div class="card-detail">
-        <span>Ing. SEM: ${m.ingresoSEM}</span>
-        <span>${m.antAbsoluta}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════════
-// DETAIL PANEL
-// ═══════════════════════════════════════════════
+// ── DETAIL ────────────────────────────────────────────────
 function showDetail(num) {
   const m = allMembers.find(x => x.num === num);
   if (!m) return;
-
-  document.getElementById('detail-name').textContent = `${m.apellidos}, ${m.nombre}`;
-
-  const postings = m.adscripciones.filter(a => COUNTRIES.has(a.lugar));
-  const internal = m.adscripciones.filter(a => !COUNTRIES.has(a.lugar));
-
-  document.getElementById('detail-body').innerHTML = `
-    <!-- Personal -->
-    <div class="detail-section">
+  document.getElementById('dtitle').textContent = m.rawName;
+  const ext  = m.adscripciones.filter(a => isExt(a.texto));
+  const int_ = m.adscripciones.filter(a => !isExt(a.texto));
+  document.getElementById('dbody').innerHTML = `
+    <div class="ds">
       <h4>Datos Personales</h4>
-      <div class="detail-grid">
-        <div class="dg-item"><label>Lugar de Nacimiento</label><span>${m.nacimiento}</span></div>
-        <div class="dg-item"><label>Fecha de Nacimiento</label><span>${m.fechaNac}</span></div>
-        <div class="dg-item"><label>Escolaridad</label><span>${m.escolaridad}</span></div>
-        <div class="dg-item"><label>Especialidad</label><span>${m.especialidad}</span></div>
-        <div class="dg-item"><label>Deps. Económicos</label><span>${m.depsEcon}</span></div>
-        <div class="dg-item"><label>Antigüedad Absoluta</label><span>${m.antAbsoluta}</span></div>
+      <div class="dg">
+        <div class="di"><label>Nacimiento</label><span>${m.nacimiento||'—'}</span></div>
+        <div class="di"><label>Fecha Nac.</label><span>${m.fechaNac||'—'}</span></div>
+        <div class="di"><label>Escolaridad</label><span>${m.escolaridad||'—'}</span></div>
+        <div class="di"><label>Especialidad</label><span>${m.especialidad||'—'}</span></div>
+        <div class="di"><label>Deps. Económicos</label><span>${m.depsEcon||'—'}</span></div>
+        <div class="di"><label>Antigüedad</label><span>${m.antAbsoluta||'—'}</span></div>
       </div>
     </div>
-
-    <!-- Ingreso -->
-    <div class="detail-section">
+    <div class="ds">
       <h4>Ingreso al Servicio</h4>
-      <div class="detail-grid">
-        <div class="dg-item"><label>Ingreso a la SRE</label><span>${m.ingresoSRE}</span></div>
-        <div class="dg-item"><label>Ingreso al SEM</label><span>${m.ingresoSEM}</span></div>
-        <div class="dg-item"><label>Ant. Relativa</label><span>${m.antRelativa}</span></div>
+      <div class="dg">
+        <div class="di"><label>Ingreso SRE</label><span>${m.ingresoSRE||'—'}</span></div>
+        <div class="di"><label>Ingreso SEM</label><span>${m.ingresoSEM||'—'}</span></div>
+        <div class="di"><label>Ant. Relativa</label><span>${m.antRelativa||'—'}</span></div>
       </div>
     </div>
-
-    <!-- Idiomas -->
-    <div class="detail-section">
-      <h4>Idiomas</h4>
-      <div class="langs-row">${m.idiomas.map(l =>
-        `<span class="lang-pill">${l}</span>`).join('')}
-      </div>
-    </div>
-
-    <!-- Rangos -->
-    <div class="detail-section">
-      <h4>Trayectoria de Rangos</h4>
-      <div class="ranks-row">${m.rangos.map(r =>
-        `<span class="rank-pill">${r.rango} <span style="opacity:.5">${r.fecha}</span></span>`
-      ).join('')}</div>
-    </div>
-
-    <!-- Adscripciones en el exterior -->
-    ${postings.length ? `
-    <div class="detail-section">
-      <h4>Adscripciones en el Exterior</h4>
-      <div class="timeline">
-        ${postings.map(a => `
-          <div class="tl-item posting">
-            <div class="tl-adscripcion posting-name">📍 ${a.lugar}</div>
-            <div class="tl-funcion">${a.funcion}</div>
-            <div class="tl-period">${a.inicio}${a.fin ? ' → ' + a.fin : ' → presente'}</div>
-          </div>`).join('')}
+    ${m.idiomas.length ? `<div class="ds"><h4>Idiomas</h4>
+      <div class="langs">${m.idiomas.map(l=>`<span class="lp">${l}</span>`).join('')}</div>
+    </div>` : ''}
+    ${m.rangos.length ? `<div class="ds"><h4>Trayectoria de Rangos</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+        ${m.rangos.map(r=>`<span class="rp">${r.rango}<span>${r.fecha}</span></span>`).join('')}
       </div>
     </div>` : ''}
-
-    <!-- Adscripciones internas -->
-    ${internal.length ? `
-    <div class="detail-section">
-      <h4>Adscripciones Internas / SRE</h4>
-      <div class="timeline">
-        ${internal.map(a => `
-          <div class="tl-item">
-            <div class="tl-adscripcion">${a.lugar}</div>
-            <div class="tl-funcion">${a.funcion !== '*' ? a.funcion : '—'}</div>
-            <div class="tl-period">${a.inicio}${a.fin ? ' → ' + a.fin : ''}</div>
-          </div>`).join('')}
+    ${ext.length ? `<div class="ds"><h4>Adscripciones Exterior</h4>
+      <div class="tl">${ext.map(a=>`
+        <div class="ti ext">
+          <div class="ti-place">📍 ${a.texto}</div>
+          <div class="ti-period">${a.inicio}${a.fin?' → '+a.fin:' → presente'}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+    ${int_.length ? `<div class="ds"><h4>Adscripciones Internas SRE</h4>
+      <div class="tl">${int_.map(a=>`
+        <div class="ti">
+          <div class="ti-place">${a.texto}</div>
+          <div class="ti-period">${a.inicio}${a.fin?' → '+a.fin:''}</div>
+        </div>`).join('')}
       </div>
     </div>` : ''}
   `;
-
-  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
 }
 
-function closeDetail(e) {
-  if (e.target === document.getElementById('detail-overlay')) closeDetailPanel();
-}
-function closeDetailPanel() {
-  document.getElementById('detail-overlay').classList.remove('open');
-}
+function bgClose(e) { if(e.target===document.getElementById('overlay')) closeDetail(); }
+function closeDetail() { document.getElementById('overlay').classList.remove('open'); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeDetail(); });
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeDetailPanel();
-});
-
-// ═══════════════════════════════════════════════
-// START
-// ═══════════════════════════════════════════════
-init();
+// ── LOADER / STATUS ───────────────────────────────────────
+function showLoader(msg) { document.getElementById('lmsg').textContent=msg; document.getElementById('loader').classList.add('show'); }
+function setLoader(msg)  { document.getElementById('lmsg').textContent=msg; }
+function hideLoader()    { document.getElementById('loader').classList.remove('show'); }
+function setStatus(msg, ok, err) {
+  const el = document.getElementById('pdf-status');
+  el.innerHTML = msg;
+  el.className = 'pdf-status'+(ok?' ok':err?' err':'');
+}
 </script>
 </body>
 </html>
